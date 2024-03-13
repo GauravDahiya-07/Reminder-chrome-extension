@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import '../App.css'
 import {
   TextField,
   MenuItem,
@@ -26,6 +27,7 @@ import TableCell from "@mui/material/TableCell";
 import TableBody from "@mui/material/TableBody";
 import IconButton from "@mui/material/IconButton";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from '@mui/icons-material/Edit';
 
 export interface Reminder {
   id: number;
@@ -41,6 +43,8 @@ const HomePage: React.FC = () => {
   const [dayOfMonth, setDayOfMonth] = useState<number>(1);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [showReminders, setShowReminders] = useState(false);
+  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+
   const [newReminder, setNewReminder] = useState<Reminder>({
     id: new Date().getTime(),
     name: "",
@@ -75,22 +79,45 @@ const HomePage: React.FC = () => {
 
     setReminders(storedReminders);
   }, []);
+
+  const handleEditReminder = (id: number) => {
+    const reminderToEdit = reminders.find((reminder) => reminder.id === id);
+    console.log(reminderToEdit)
+    if (reminderToEdit) {
+      setEditingReminder(reminderToEdit);
+      setNewReminder({
+        ...reminderToEdit,
+        remindAt: reminderToEdit.remindAt ? new Date(reminderToEdit.remindAt).toISOString() : "",
+      });
+    }
+  };
+  
+  
   const handleSaveReminder = () => {
-    setReminders((prevReminders) => {
-      const updatedReminders = [
-        ...prevReminders,
-        {
-          ...newReminder,
-          dayOfWeek: newReminder.frequency === "weekly" ? dayOfWeek : undefined,
-          dayOfMonth:
-            newReminder.frequency === "monthly"
-              ? newReminder.dayOfMonth
-              : undefined,
-        },
-      ];
-      localStorage.setItem("reminders", JSON.stringify(updatedReminders));
-      return updatedReminders;
-    });
+    if (editingReminder) {
+      setReminders((prevReminders) => {
+        const updatedReminders = prevReminders.map((reminder) =>
+          reminder.id === editingReminder.id ? { ...newReminder } : reminder
+        );
+        localStorage.setItem("reminders", JSON.stringify(updatedReminders));
+        return updatedReminders;
+      });
+      setEditingReminder(null);
+    } else {
+      setReminders((prevReminders) => {
+        const updatedReminders = [
+          ...prevReminders,
+          {
+            ...newReminder,
+            dayOfWeek: newReminder.frequency === "weekly" ? dayOfWeek : undefined,
+            dayOfMonth:
+              newReminder.frequency === "monthly" ? dayOfMonth : undefined,
+          },
+        ];
+        localStorage.setItem("reminders", JSON.stringify(updatedReminders));
+        return updatedReminders;
+      });
+    }
 
     setNewReminder({
       id: new Date().getTime(),
@@ -99,6 +126,7 @@ const HomePage: React.FC = () => {
       frequency: "once",
     });
   };
+
 
   const handleDeleteReminder = (id: number) => {
     setReminders((prevReminders) => {
@@ -339,8 +367,10 @@ const HomePage: React.FC = () => {
             >
               {showReminders ? "Hide Reminders" : "Show Reminders"}
             </Button>
+            <div className="scroll-container">
             {showReminders && (
-              <TableContainer>
+              <div style={{ overflowX: 'auto'}}>
+              <TableContainer >
                 <Table sx={{ minWidth: 550 }}>
                   <TableHead>
                     <TableRow>
@@ -357,7 +387,7 @@ const HomePage: React.FC = () => {
                         Recurrence
                       </TableCell>
                       <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Delete
+                        Edit / Delete
                       </TableCell>
                     </TableRow>
                   </TableHead>
@@ -367,12 +397,16 @@ const HomePage: React.FC = () => {
                         <TableCell align="center">{reminder.name}</TableCell>
 
                         <TableCell align="center">
-                          {reminder.frequency === "weekly"
+                        {reminder.frequency === "once" 
+                            ? new Date(reminder.remindAt).toLocaleDateString("en-GB")
+                            : reminder.frequency === "daily"
+                            ? ` Daily `
+                            : reminder.frequency === "weekly"
                             ? `Every ${reminder.dayOfWeek}`
                             : reminder.frequency === "monthly" &&
                               reminder.dayOfMonth !== undefined
-                            ? `Day ${reminder.dayOfMonth}`
-                            : new Date(reminder.remindAt).getDate()}
+                            ? `Day ${reminder.dayOfMonth} of Every Month`
+                            : ""}
                         </TableCell>
 
                         <TableCell align="center">
@@ -384,11 +418,15 @@ const HomePage: React.FC = () => {
                           {reminder.frequency}
                         </TableCell>
                         <TableCell align="center">
-                          <IconButton aria-label="delete" size="small">
-                            <DeleteIcon
-                              fontSize="small"
-                              onClick={() => handleDeleteReminder(reminder.id)}
-                            />
+                          <IconButton aria-label="delete" size="small"
+                              onClick={() => handleEditReminder(reminder.id)}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton aria-label="delete" size="small"
+                               onClick={() => handleDeleteReminder(reminder.id)}
+                          >
+                            <DeleteIcon fontSize="small"  />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -396,7 +434,9 @@ const HomePage: React.FC = () => {
                   </TableBody>
                 </Table>
               </TableContainer>
+              </div>
             )}
+            </div>
           </Grid>
         </Grid>
       </Card>

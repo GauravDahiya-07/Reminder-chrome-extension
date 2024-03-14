@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import '../App.css'
+import '../App.css';
 import {
   TextField,
   MenuItem,
@@ -82,17 +82,16 @@ const HomePage: React.FC = () => {
 
   const handleEditReminder = (id: number) => {
     const reminderToEdit = reminders.find((reminder) => reminder.id === id);
-    console.log(reminderToEdit)
     if (reminderToEdit) {
       setEditingReminder(reminderToEdit);
       setNewReminder({
         ...reminderToEdit,
-        remindAt: reminderToEdit.remindAt ? new Date(reminderToEdit.remindAt).toISOString() : "",
+        remindAt: reminderToEdit.remindAt
+          ? new Date(reminderToEdit.remindAt).toLocaleString("en-GB")
+          : "",
       });
     }
   };
-  
-  
   const handleSaveReminder = () => {
     if (editingReminder) {
       setReminders((prevReminders) => {
@@ -109,7 +108,8 @@ const HomePage: React.FC = () => {
           ...prevReminders,
           {
             ...newReminder,
-            dayOfWeek: newReminder.frequency === "weekly" ? dayOfWeek : undefined,
+            dayOfWeek:
+              newReminder.frequency === "weekly" ? dayOfWeek : undefined,
             dayOfMonth:
               newReminder.frequency === "monthly" ? dayOfMonth : undefined,
           },
@@ -126,7 +126,6 @@ const HomePage: React.FC = () => {
       frequency: "once",
     });
   };
-
 
   const handleDeleteReminder = (id: number) => {
     setReminders((prevReminders) => {
@@ -223,7 +222,7 @@ const HomePage: React.FC = () => {
                   onChange={(date: Date | null) =>
                     setNewReminder((prevReminder) => ({
                       ...prevReminder,
-                      remindAt: date ? date.toISOString() : "",
+                      remindAt: date ? date.toLocaleString() : "",
                     }))
                   }
                   sx={{
@@ -238,7 +237,7 @@ const HomePage: React.FC = () => {
                   onChange={(date: Date | null) =>
                     setNewReminder((prevReminder) => ({
                       ...prevReminder,
-                      remindAt: date ? date.toISOString() : "",
+                      remindAt: date ? date.toLocaleString() : "",
                     }))
                   }
                   sx={{
@@ -275,7 +274,7 @@ const HomePage: React.FC = () => {
                         onChange={(date: Date | null) =>
                           setNewReminder((prevReminder) => ({
                             ...prevReminder,
-                            remindAt: date ? date.toISOString() : "",
+                            remindAt: date ? date.toLocaleString() : "",
                           }))
                         }
                         sx={{
@@ -318,7 +317,7 @@ const HomePage: React.FC = () => {
                         onChange={(date: Date | null) =>
                           setNewReminder((prevReminder) => ({
                             ...prevReminder,
-                            remindAt: date ? date.toISOString() : "",
+                            remindAt: date ? date.toLocaleString() : "",
                           }))
                         }
                         sx={{
@@ -368,74 +367,84 @@ const HomePage: React.FC = () => {
               {showReminders ? "Hide Reminders" : "Show Reminders"}
             </Button>
             <div className="scroll-container">
-            {showReminders && (
-              <div style={{ overflowX: 'auto'}}>
-              <TableContainer >
-                <Table sx={{ minWidth: 550 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Description
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Remind On
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Time
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Recurrence
-                      </TableCell>
-                      <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                        Edit / Delete
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {reminders.map((reminder) => (
-                      <TableRow key={reminder.id}>
-                        <TableCell align="center">{reminder.name}</TableCell>
+              {showReminders && (
+                <div style={{ overflowX: "auto" }}>
+                  <TableContainer>
+                    <Table sx={{ minWidth: 550 }}>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Description
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Remind On
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Time
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Recurrence
+                          </TableCell>
+                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                            Edit / Delete
+                          </TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {reminders.map((reminder) => (
+                          <TableRow key={reminder.id}>
+                            <TableCell align="center">
+                              {reminder.name}
+                            </TableCell>
 
-                        <TableCell align="center">
-                        {reminder.frequency === "once" 
-                            ? new Date(reminder.remindAt).toLocaleDateString("en-GB")
-                            : reminder.frequency === "daily"
-                            ? ` Daily `
-                            : reminder.frequency === "weekly"
-                            ? `Every ${reminder.dayOfWeek}`
-                            : reminder.frequency === "monthly" &&
-                              reminder.dayOfMonth !== undefined
-                            ? `Day ${reminder.dayOfMonth} of Every Month`
-                            : ""}
-                        </TableCell>
+                            <TableCell align="center">
+                              {reminder.frequency === "once"
+                                ? new Date(
+                                    reminder.remindAt
+                                  ).toLocaleDateString("en-GB")
+                                : reminder.frequency === "daily"
+                                ? ` Daily `
+                                : reminder.frequency === "weekly"
+                                ? `Every ${reminder.dayOfWeek}`
+                                : reminder.frequency === "monthly" &&
+                                  reminder.dayOfMonth !== undefined
+                                ? `Day ${reminder.dayOfMonth} of Every Month`
+                                : ""}
+                            </TableCell>
 
-                        <TableCell align="center">
-                          {new Date(reminder.remindAt).toLocaleTimeString(
-                            "en-GB"
-                          )}
-                        </TableCell>
-                        <TableCell align="center">
-                          {reminder.frequency}
-                        </TableCell>
-                        <TableCell align="center">
-                          <IconButton aria-label="delete" size="small"
-                              onClick={() => handleEditReminder(reminder.id)}
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton aria-label="delete" size="small"
-                               onClick={() => handleDeleteReminder(reminder.id)}
-                          >
-                            <DeleteIcon fontSize="small"  />
-                          </IconButton>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-              </div>
-            )}
+                            <TableCell align="center">
+                              {new Date(reminder.remindAt).toLocaleTimeString(
+                                "en-GB"
+                              )}
+                            </TableCell>
+                            <TableCell align="center">
+                              {reminder.frequency}
+                            </TableCell>
+                            <TableCell align="center">
+                              <IconButton
+                                aria-label="delete"
+                                size="small"
+                                onClick={() => handleEditReminder(reminder.id)}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                aria-label="delete"
+                                size="small"
+                                onClick={() =>
+                                  handleDeleteReminder(reminder.id)
+                                }
+                              >
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </div>
+              )}
             </div>
           </Grid>
         </Grid>

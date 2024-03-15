@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import '../App.css';
+import moment from "moment";
 import {
   TextField,
   MenuItem,
@@ -32,7 +33,7 @@ import EditIcon from '@mui/icons-material/Edit';
 export interface Reminder {
   id: number;
   name: string;
-  remindAt: string;
+  remindAt: Date;
   frequency: string;
   dayOfWeek?: string;
   dayOfMonth?: number;
@@ -48,7 +49,7 @@ const HomePage: React.FC = () => {
   const [newReminder, setNewReminder] = useState<Reminder>({
     id: new Date().getTime(),
     name: "",
-    remindAt: "",
+    remindAt: moment().toDate(),
     frequency: "once",
   });
 
@@ -76,22 +77,25 @@ const HomePage: React.FC = () => {
     const storedReminders = JSON.parse(
       localStorage.getItem("reminders") || "[]"
     );
-
     setReminders(storedReminders);
-  }, []);
+  }, [reminders]);
 
   const handleEditReminder = (id: number) => {
     const reminderToEdit = reminders.find((reminder) => reminder.id === id);
+    console.log("Reminder to Edit:", reminderToEdit);
     if (reminderToEdit) {
       setEditingReminder(reminderToEdit);
       setNewReminder({
         ...reminderToEdit,
-        remindAt: reminderToEdit.remindAt
-          ? new Date(reminderToEdit.remindAt).toLocaleString("en-GB")
-          : "",
       });
+      if (reminderToEdit.frequency === "weekly") {
+        setDayOfWeek(reminderToEdit.dayOfWeek || "Sunday");
+      } else if (reminderToEdit.frequency === "monthly") {
+        setDayOfMonth(reminderToEdit.dayOfMonth || 1);
+      }
     }
   };
+
   const handleSaveReminder = () => {
     if (editingReminder) {
       setReminders((prevReminders) => {
@@ -122,7 +126,7 @@ const HomePage: React.FC = () => {
     setNewReminder({
       id: new Date().getTime(),
       name: "",
-      remindAt: "",
+      remindAt: moment().toDate(),
       frequency: "once",
     });
   };
@@ -148,83 +152,84 @@ const HomePage: React.FC = () => {
         justifyContent: "center",
       }}
     >
-      <Card variant="outlined" sx={{ maxWidth: 360, margin: 2 }}>
-        <Box sx={{ p: 2, backgroundColor: "#75b666", marginBottom: 1 }}>
-          <Typography
-            variant="h6"
-            component="div"
-            sx={{ textAlign: "center", fontWeight: "bold" }}
-          >
-            Set a Reminder
-          </Typography>
-        </Box>
-        <Grid container spacing={1.5} sx={{ marginX: "auto", marginY: "auto" }}>
-          <Grid item xs={11}>
-            <TextField
-              label="Remind About"
-              fullWidth
-              value={newReminder.name}
-              name="name"
-              color="success"
-              focused
-              onChange={(
-                e: React.ChangeEvent<{
-                  name?: string | undefined;
-                  value: unknown;
-                }>
-              ) =>
-                setNewReminder((prevReminder) => ({
-                  ...prevReminder,
-                  name: e.target.value as string,
-                }))
-              }
-            />
-          </Grid>
-          <Grid item xs={4}>
-            <FormControl fullWidth color="success" focused>
-              <InputLabel>Frequency</InputLabel>
-              <Select
-                label="Frequency"
-                name="frequency"
-                value={newReminder.frequency}
-                onChange={(e: SelectChangeEvent<string>) =>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <Card variant="outlined" sx={{ maxWidth: 360, margin: 2 }}>
+          <Box sx={{ p: 2, backgroundColor: "#75b666", marginBottom: 1 }}>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{ textAlign: "center", fontWeight: "bold" }}
+            >
+              Set a Reminder
+            </Typography>
+          </Box>
+          <Grid container spacing={1.5} sx={{ marginX: "auto", marginY: "auto" }}>
+            <Grid item xs={11}>
+              <TextField
+                label="Remind About"
+                fullWidth
+                value={newReminder.name}
+                name="name"
+                color="success"
+                focused
+                onChange={(
+                  e: React.ChangeEvent<{
+                    name?: string | undefined;
+                    value: unknown;
+                  }>
+                ) =>
                   setNewReminder((prevReminder) => ({
                     ...prevReminder,
-                    frequency: e.target.value as string,
+                    name: e.target.value as string,
                   }))
                 }
-              >
-                <MenuItem value="once">Once</MenuItem>
-                <MenuItem value="daily">Daily</MenuItem>
-                <MenuItem value="weekly">Weekly</MenuItem>
-                <MenuItem value="monthly">Monthly</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid
-            item
-            xs={7}
-            sx={{
-              "& .MuiTextField-root": {
-                "& fieldset": {
-                  borderColor: "#4a8939 !important",
-                  borderWidth: "2px",
+              />
+            </Grid>
+            <Grid item xs={4}>
+              <FormControl fullWidth color="success" focused>
+                <InputLabel>Frequency</InputLabel>
+                <Select
+                  label="Frequency"
+                  name="frequency"
+                  value={newReminder.frequency}
+                  onChange={(e: SelectChangeEvent<string>) =>
+                    setNewReminder((prevReminder) => ({
+                      ...prevReminder,
+                      frequency: e.target.value as string,
+                    }))
+                  }
+                >
+                  <MenuItem value="once">Once</MenuItem>
+                  <MenuItem value="daily">Daily</MenuItem>
+                  <MenuItem value="weekly">Weekly</MenuItem>
+                  <MenuItem value="monthly">Monthly</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid
+              item
+              xs={7}
+              sx={{
+                "& .MuiTextField-root": {
+                  "& fieldset": {
+                    borderColor: "#4a8939 !important",
+                    borderWidth: "2px",
+                  },
                 },
-              },
-            }}
-          >
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              }}
+            >
               {newReminder.frequency === "once" && (
                 <MobileDateTimePicker
                   label="Date and Time"
                   disablePast
                   views={["year", "month", "day", "hours", "minutes"]}
-                  onChange={(date: Date | null) =>
+                
+                  onChange={(date: Date | null) => {
                     setNewReminder((prevReminder) => ({
                       ...prevReminder,
-                      remindAt: date ? date.toLocaleString() : "",
-                    }))
-                  }
+                      remindAt: date !== null ? date : new Date(),
+                    }));
+                  }}
                   sx={{
                     "& .MuiInputLabel-root": { color: "#4a8939 !important" },
                   }}
@@ -237,7 +242,7 @@ const HomePage: React.FC = () => {
                   onChange={(date: Date | null) =>
                     setNewReminder((prevReminder) => ({
                       ...prevReminder,
-                      remindAt: date ? date.toLocaleString() : "",
+                      remindAt: date !== null ? date : new Date(),
                     }))
                   }
                   sx={{
@@ -267,23 +272,21 @@ const HomePage: React.FC = () => {
                     </FormControl>
                   </Grid>
                   <Grid item xs={6}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <MobileDateTimePicker
-                        label="Time"
-                        views={["hours", "minutes"]}
-                        onChange={(date: Date | null) =>
-                          setNewReminder((prevReminder) => ({
-                            ...prevReminder,
-                            remindAt: date ? date.toLocaleString() : "",
-                          }))
-                        }
-                        sx={{
-                          "& .MuiInputLabel-root": {
-                            color: "#4a8939 !important",
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
+                    <MobileDateTimePicker
+                      label="Time"
+                      views={["hours", "minutes"]}
+                      onChange={(date: Date | null) =>
+                        setNewReminder((prevReminder) => ({
+                          ...prevReminder,
+                          remindAt: date !== null ? date : new Date(),
+                        }))
+                      }
+                      sx={{
+                        "& .MuiInputLabel-root": {
+                          color: "#4a8939 !important",
+                        },
+                      }}
+                    />
                   </Grid>
                 </Grid>
               )}
@@ -310,145 +313,141 @@ const HomePage: React.FC = () => {
                     </FormControl>
                   </Grid>
                   <Grid item xs={6}>
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <MobileDateTimePicker
-                        label="Time"
-                        views={["hours", "minutes"]}
-                        onChange={(date: Date | null) =>
-                          setNewReminder((prevReminder) => ({
-                            ...prevReminder,
-                            remindAt: date ? date.toLocaleString() : "",
-                          }))
-                        }
-                        sx={{
-                          "& .MuiInputLabel-root": {
-                            color: "#4a8939 !important",
-                          },
-                        }}
-                      />
-                    </LocalizationProvider>
+                    <MobileDateTimePicker
+                      label="Time"
+                      views={["hours", "minutes"]}
+                      onChange={(date: Date | null) =>
+                        setNewReminder((prevReminder) => ({
+                          ...prevReminder,
+                          remindAt: date !== null ? date : new Date(),
+                        }))
+                      }
+                      sx={{
+                        "& .MuiInputLabel-root": {
+                          color: "#4a8939 !important",
+                        },
+                      }}
+                    />
                   </Grid>
                 </Grid>
               )}
-            </LocalizationProvider>
-          </Grid>
+            </Grid>
 
-          <Grid container item xs={12}>
-            <Button
-              variant="contained"
-              sx={{
-                marginRight: "8px",
-                marginBottom: "8px",
-                backgroundColor: "#75b666",
-                "&:hover": {
-                  backgroundColor: "#407830",
-                },
-              }}
-              size="small"
-              onClick={handleSaveReminder}
-              endIcon={<SaveIcon />}
-              disabled={isSaveButtonDisabled}
-            >
-              Save Reminder
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                marginBottom: "8px",
-                backgroundColor: "#75b666",
-                "&:hover": {
-                  backgroundColor: "#407830",
-                },
-              }}
-              size="small"
-              endIcon={<ArrowCircleRightIcon />}
-              onClick={() => setShowReminders(!showReminders)}
-            >
-              {showReminders ? "Hide Reminders" : "Show Reminders"}
-            </Button>
-            <div className="scroll-container">
-              {showReminders && (
-                <div style={{ overflowX: "auto" }}>
-                  <TableContainer>
-                    <Table sx={{ minWidth: 550 }}>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Description
-                          </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Remind On
-                          </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Time
-                          </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Recurrence
-                          </TableCell>
-                          <TableCell align="center" sx={{ fontWeight: "bold" }}>
-                            Edit / Delete
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {reminders.map((reminder) => (
-                          <TableRow key={reminder.id}>
-                            <TableCell align="center">
-                              {reminder.name}
+            <Grid container item xs={12}>
+              <Button
+                variant="contained"
+                sx={{
+                  marginRight: "8px",
+                  marginBottom: "8px",
+                  backgroundColor: "#75b666",
+                  "&:hover": {
+                    backgroundColor: "#407830",
+                  },
+                }}
+                size="small"
+                onClick={handleSaveReminder}
+                endIcon={<SaveIcon />}
+                disabled={isSaveButtonDisabled}
+              >
+                Save Reminder
+              </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  marginBottom: "8px",
+                  backgroundColor: "#75b666",
+                  "&:hover": {
+                    backgroundColor: "#407830",
+                  },
+                }}
+                size="small"
+                endIcon={<ArrowCircleRightIcon />}
+                onClick={() => setShowReminders(!showReminders)}
+              >
+                {showReminders ? "Hide Reminders" : "Show Reminders"}
+              </Button>
+              <div className="scroll-container">
+                {showReminders && (
+                  <div style={{ overflowX: "auto" }}>
+                    <TableContainer>
+                      <Table sx={{ minWidth: 550 }}>
+                        <TableHead>
+                          <TableRow>
+                            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                              Description
                             </TableCell>
-
-                            <TableCell align="center">
-                              {reminder.frequency === "once"
-                                ? new Date(
-                                    reminder.remindAt
-                                  ).toLocaleDateString("en-GB")
-                                : reminder.frequency === "daily"
-                                ? ` Daily `
-                                : reminder.frequency === "weekly"
-                                ? `Every ${reminder.dayOfWeek}`
-                                : reminder.frequency === "monthly" &&
-                                  reminder.dayOfMonth !== undefined
-                                ? `Day ${reminder.dayOfMonth} of Every Month`
-                                : ""}
+                            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                              Remind On
                             </TableCell>
-
-                            <TableCell align="center">
-                              {new Date(reminder.remindAt).toLocaleTimeString(
-                                "en-GB"
-                              )}
+                            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                              Time
                             </TableCell>
-                            <TableCell align="center">
-                              {reminder.frequency}
+                            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                              Recurrence
                             </TableCell>
-                            <TableCell align="center">
-                              <IconButton
-                                aria-label="delete"
-                                size="small"
-                                onClick={() => handleEditReminder(reminder.id)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                aria-label="delete"
-                                size="small"
-                                onClick={() =>
-                                  handleDeleteReminder(reminder.id)
-                                }
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
+                            <TableCell align="center" sx={{ fontWeight: "bold" }}>
+                              Edit / Delete
                             </TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                </div>
-              )}
-            </div>
+                        </TableHead>
+                        <TableBody>
+                          {reminders.map((reminder) => (
+                            <TableRow key={reminder.id}>
+                              <TableCell align="center">
+                                {reminder.name}
+                              </TableCell>
+
+                              <TableCell align="center">
+                                {reminder.frequency === "once"
+                                  ? moment(reminder.remindAt).format(
+                                      "MMMM Do YYYY"
+                                    )
+                                  : reminder.frequency === "daily"
+                                  ? ` Daily `
+                                  : reminder.frequency === "weekly"
+                                  ? `Every ${reminder.dayOfWeek}`
+                                  : reminder.frequency === "monthly" &&
+                                    reminder.dayOfMonth !== undefined
+                                  ? `Day ${reminder.dayOfMonth} of Every Month`
+                                  : ""}
+                              </TableCell>
+
+                              <TableCell align="center">
+                                {moment(reminder.remindAt).format("h:mm A")}
+                              </TableCell>
+                              <TableCell align="center">
+                                {reminder.frequency}
+                              </TableCell>
+                              <TableCell align="center">
+                                <IconButton
+                                  aria-label="edit"
+                                  size="small"
+                                  onClick={() => handleEditReminder(reminder.id)}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton
+                                  aria-label="delete"
+                                  size="small"
+                                  onClick={() =>
+                                    handleDeleteReminder(reminder.id)
+                                  }
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </div>
+                )}
+              </div>
+            </Grid>
           </Grid>
-        </Grid>
-      </Card>
+        </Card>
+      </LocalizationProvider>
     </Container>
   );
 };

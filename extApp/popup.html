@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reminder Extension</title>
+  <script src="popup.js"></script>
+</head>
+<body>
+  <h2>Set Reminder</h2>
+  <label for="reminder">Reminder:</label>
+  <input type="text" id="reminder"><br><br>
+  <label for="datetime">Date & Time:</label>
+  <input type="datetime-local" id="datetime"><br><br>
+  <label for="repeat">Repeat:</label>
+  <select id="repeat">
+    <option value="once">Once</option>
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="monthly">Monthly</option>
+  </select><br><br>
+  <button id="setReminder">Set Reminder</button>
+</body>
+</html>

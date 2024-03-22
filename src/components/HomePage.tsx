@@ -219,11 +219,13 @@ const HomePage: React.FC = () => {
               }}
             >
               {newReminder.frequency === "once" && (
+                <>
                 <MobileDateTimePicker
                   label="Date and Time"
                   disablePast
                   views={["year", "month", "day", "hours", "minutes"]}
-                
+                  // value={newReminder.remindAt}
+                  // value={moment(newReminder.remindAt).format('MMMM Do YYYY, h:mm a')}
                   onChange={(date: Date | null) => {
                     setNewReminder((prevReminder) => ({
                       ...prevReminder,
@@ -233,7 +235,9 @@ const HomePage: React.FC = () => {
                   sx={{
                     "& .MuiInputLabel-root": { color: "#4a8939 !important" },
                   }}
+                  
                 />
+              </>
               )}
               {newReminder.frequency === "daily" && (
                 <MobileDateTimePicker
